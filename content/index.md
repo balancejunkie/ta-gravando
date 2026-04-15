@@ -3,7 +3,7 @@
 > Wiki de análise do canal **Tá Gravando** (Ítalo Sena) — mapeando a engenharia de comédia por trás das pegadinhas mais engraçadas do YouTube Brasil.  
 > Baseado no [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) de Andrej Karpathy.
 
-> 🎛️ **[→ Ver Dashboard Visual (Comedy Engine Overview)](overview.html)** — snapshot dos 17 princípios, 3 pilares e arco canônico.
+> 🎛️ **[→ Ver Dashboard Visual (Comedy Engine Overview)](static/overview.html)** — snapshot dos 17 princípios, 3 pilares e arco canônico.
 
 ---
 
