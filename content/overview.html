@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tá Gravando — Comedy Engine Overview</title>
+<meta name="description" content="Engenharia reversa do canal Tá Gravando (Ítalo Sena): 103 episódios, 507 pegadinhas, 17 princípios de comédia mapeados. Por que esse humor funciona tão bem?">
+<meta name="author" content="Aurelio Rosa">
+<meta name="theme-color" content="#0e0d10">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tá Gravando — Comedy Engine">
+<meta property="og:description" content="103 episódios. 507 pegadinhas. 17 princípios. A engenharia por trás do humor do Ítalo Sena, mapeada como wiki.">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tá Gravando — Comedy Engine">
+<meta name="twitter:description" content="103 episódios. 507 pegadinhas. 17 princípios. A engenharia do humor, mapeada.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0d10'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-family='system-ui' font-size='36' font-weight='800' fill='%23ffb84a'%3ETG%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0e0d10; --panel:#17161b; --panel2:#1b1a20; --ink:#f3efe7; --dim:#8b8691;
+    --accent:#ffb84a; --hot:#ff5a5f; --cool:#4ad8e8; --ok:#7ed957; --violet:#b47cff;
+    --line:#2a272f; --line2:#3a3540;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Inter",sans-serif;
+    line-height:1.5;padding:28px;max-width:1320px;margin:auto}
+  h1{font-size:34px;margin:0 0 4px;letter-spacing:-.5px}
+  h1 .sub{color:var(--accent)}
+  .tag{color:var(--dim);font-size:13px;margin-bottom:24px}
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:2px;
+    color:var(--dim);margin:36px 0 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .grid{display:grid;gap:16px}
+  .g-kpis{grid-template-columns:repeat(6,1fr)}
+  .g-two{grid-template-columns:1.15fr .85fr;gap:20px}
+  .g-three{grid-template-columns:repeat(3,1fr)}
+  .g-prin{grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:1100px){ .g-prin{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:720px){ .g-prin{grid-template-columns:1fr} .g-kpis{grid-template-columns:repeat(3,1fr)} .g-two{grid-template-columns:1fr} }
+  .card{background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:18px 20px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:1.4px;
+    margin:0 0 12px;color:var(--dim)}
+  .kpi .n{font-size:38px;font-weight:700;letter-spacing:-1px;line-height:1}
+  .kpi .l{font-size:11px;color:var(--dim);margin-top:6px;text-transform:uppercase;letter-spacing:1px}
+  .kpi.accent .n{color:var(--accent)}
+  .kpi.hot .n{color:var(--hot)}
+  .kpi.cool .n{color:var(--cool)}
+  .kpi.ok .n{color:var(--ok)}
+  .kpi.v .n{color:var(--violet)}
+
+  /* Arc anatomy */
+  .arc-wrap{position:relative;padding:14px 6px 4px}
+  .arc-curve{height:140px;position:relative;margin-top:8px}
+  .arc-curve svg{width:100%;height:100%;display:block}
+  .arc-steps{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}
+  .arc-steps .step{background:#1e1c23;border:1px solid var(--line);
+    border-radius:10px;padding:10px 10px 12px;font-size:12px}
+  .arc-steps .step .k{color:var(--accent);font-weight:700;font-size:10px;
+    display:block;margin-bottom:4px;letter-spacing:1.5px}
+  .arc-steps .step .t{color:#efe8d9;font-weight:600;margin-bottom:4px}
+  .arc-steps .step .d{color:var(--dim);font-size:11.5px;line-height:1.4}
+
+  /* Pillars */
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .pillar{background:linear-gradient(180deg,#221f27,#1a1920);
+    border:1px solid var(--line2);border-radius:12px;padding:14px;position:relative}
+  .pillar .num{position:absolute;right:12px;top:10px;font-size:28px;
+    color:#3d3747;font-weight:800}
+  .pillar h3{margin:0;font-size:16px;color:var(--accent)}
+  .pillar .why{margin:6px 0 10px;color:#cfcac2;font-size:13px}
+  .pillar .mech{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;
+    color:#b8b2a8;background:#12101a;border:1px solid #2b2635;
+    border-radius:8px;padding:8px;line-height:1.7;white-space:pre-wrap}
+
+  /* Principles grid */
+  .prin-card{background:var(--panel2);border:1px solid var(--line);
+    border-radius:14px;padding:14px 15px;position:relative;display:flex;flex-direction:column;gap:10px}
+  .prin-card.core{border-color:#6a4a12;background:linear-gradient(180deg,#241c10,#1a1912)}
+  .prin-card.new{border-color:#2e5b26;background:linear-gradient(180deg,#102015,#131a12)}
+  .prin-card.meta{border-color:#3a2a55;background:linear-gradient(180deg,#16122a,#141326)}
+  .prin-head{display:flex;align-items:flex-start;gap:10px}
+  .prin-ico{width:34px;height:34px;flex-shrink:0;background:#2a2530;
+    border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;border:1px solid var(--line2)}
+  .prin-card.core .prin-ico{background:#3d2e12;border-color:#6a4a12;color:#ffd68a}
+  .prin-card.new .prin-ico{background:#1a3020;border-color:#2e5b26;color:#a8e0a0}
+  .prin-card.meta .prin-ico{background:#261b40;border-color:#3a2a55;color:#d4bcff}
+  .prin-title{font-size:15px;font-weight:700;color:#f6efe0;line-height:1.2}
+  .prin-tag{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.3px;margin-top:2px}
+  .prin-badge{position:absolute;right:10px;top:10px;font-size:9px;
+    padding:2px 7px;border-radius:999px;letter-spacing:1.2px;font-weight:700}
+  .prin-card.core .prin-badge{background:var(--accent);color:#2b1f07}
+  .prin-card.new .prin-badge{background:var(--ok);color:#05280a}
+  .prin-card.meta .prin-badge{background:var(--violet);color:#2a1348}
+  .prin-body{font-size:12.5px;color:#cfcac2;margin:0}
+  .prin-why{font-size:12px;color:#b8b2a8;border-left:2px solid #443c2e;padding-left:8px;margin:0}
+  .prin-ex{font-size:11.5px;color:#e6dec8;background:#0f0e14;
+    border:1px dashed #3d384a;border-radius:8px;padding:8px}
+  .prin-ex b{color:var(--accent)}
+  .prin-diag{font-family:ui-monospace,Menlo,monospace;font-size:11px;
+    color:#9aa8b8;background:#0c0b10;border:1px solid #22202a;
+    border-radius:7px;padding:7px 9px;line-height:1.65;white-space:pre}
+  .prin-quote{font-style:italic;font-size:12px;color:#ffdf9d;
+    border-top:1px solid #2a2530;padding-top:8px;margin:0}
+
+  /* Combos */
+  .combos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .combo{background:#19171e;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .combo h4{margin:0 0 4px;font-size:13px;color:var(--cool)}
+  .combo .formula{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#d7d2c8}
+  .combo .ex{font-size:11.5px;color:var(--dim);margin-top:4px}
+  .combo .ex b{color:#ffdf9d;font-style:italic;font-weight:500}
+
+  /* Machado 98 */
+  .m98{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+  .m98 .node{background:linear-gradient(180deg,#1e1814,#15110f);
+    border:1px dashed #6a4a12;color:#ffdf9d;padding:12px 10px;
+    border-radius:10px;text-align:center;font-size:13px}
+  .m98 .node .emoji{font-size:22px;display:block;margin-bottom:6px}
+  .m98 .node .ep{font-size:10px;color:#b89461;margin-top:4px}
+
+  /* Chips */
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:#221f29;border:1px solid var(--line);color:#e6e0d4;
+    padding:6px 10px;border-radius:999px;font-size:12px}
+  .chip b{color:var(--cool);margin-right:4px}
+
+  /* Multipliers */
+  .mult{margin:0;padding:0;list-style:none}
+  .mult li{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:#cfcac2;display:flex;gap:10px}
+  .mult li:last-child{border-bottom:0}
+  .mult li .ico{font-size:18px;flex-shrink:0}
+  .mult li b{color:var(--accent)}
+
+  /* Verdict */
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .verdict .col h3{margin:0 0 6px;font-size:14px}
+  .verdict .ok h3{color:var(--ok)}
+  .verdict .gap h3{color:var(--hot)}
+  .verdict ul{margin:0;padding-left:18px;font-size:13px;color:#cfcac2}
+  .verdict li{margin:4px 0}
+
+  /* Legend */
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:11.5px;color:var(--dim)}
+  .legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .legend .d-core{background:var(--accent)}
+  .legend .d-new{background:var(--ok)}
+  .legend .d-meta{background:var(--violet)}
+  .legend .d-base{background:#55505d}
+
+  footer{color:var(--dim);font-size:11px;margin-top:24px;text-align:center}
+</style>
+</head>
+<body>
+
+<h1>Tá Gravando <span class="sub">— Comedy Engine, Desmontado</span></h1>
+<div class="tag">Obsidian wiki · Karpathy-style LLM pattern · snapshot 2026-04-14 · 103 eps · 507 pranks</div>
+
+<section class="grid g-kpis">
+  <div class="card kpi accent"><div class="n">103</div><div class="l">Episódios #274–#377</div></div>
+  <div class="card kpi hot"><div class="n">507</div><div class="l">Pegadinhas catalogadas</div></div>
+  <div class="card kpi cool"><div class="n">17</div><div class="l">Princípios cômicos</div></div>
+  <div class="card kpi ok"><div class="n">10</div><div class="l">Constelações temáticas</div></div>
+  <div class="card kpi v"><div class="n">5</div><div class="l">Nós no universo Machado 98</div></div>
+  <div class="card kpi"><div class="n">3</div><div class="l">Fases de ingestão</div></div>
+</section>
+
+<h2 class="section">① A Anatomia de Uma Pegadinha</h2>
+
+<section class="card">
+  <div class="arc-wrap">
+    <div class="arc-curve">
+      <svg viewBox="0 0 1200 140" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="#2a2630"/>
+            <stop offset="30%" stop-color="#6b4a1a"/>
+            <stop offset="60%" stop-color="#c07a1a"/>
+            <stop offset="85%" stop-color="#ff5a5f"/>
+            <stop offset="100%" stop-color="#ffd36b"/>
+          </linearGradient>
+        </defs>
+        <!-- baseline grid -->
+        <line x1="0" y1="120" x2="1200" y2="120" stroke="#26232c" stroke-width="1"/>
+        <line x1="0" y1="70" x2="1200" y2="70" stroke="#1d1b22" stroke-width="1" stroke-dasharray="3 4"/>
+        <line x1="0" y1="20" x2="1200" y2="20" stroke="#1d1b22" stroke-width="1" stroke-dasharray="3 4"/>
+        <!-- tension curve -->
+        <path d="M 0 115 C 150 110, 250 100, 340 85 S 560 60, 700 40 S 900 18, 1030 12 L 1100 55 L 1160 90 L 1200 85"
+          fill="none" stroke="url(#g1)" stroke-width="4" stroke-linecap="round"/>
+        <!-- step markers -->
+        <g font-family="ui-monospace" font-size="11" fill="#8b8691">
+          <circle cx="50"  cy="115" r="4" fill="#3d3747"/><text x="50"  y="138" text-anchor="middle">setup</text>
+          <circle cx="250" cy="100" r="4" fill="#3d3747"/><text x="250" y="138" text-anchor="middle">abordagem</text>
+          <circle cx="450" cy="75"  r="4" fill="#c07a1a"/><text x="450" y="138" text-anchor="middle">estranheza</text>
+          <circle cx="700" cy="40"  r="4" fill="#c07a1a"/><text x="700" y="138" text-anchor="middle">escalação</text>
+          <circle cx="1030" cy="12" r="5" fill="#ff5a5f"/><text x="1030" y="138" text-anchor="middle">clímax</text>
+          <circle cx="1180" cy="87" r="4" fill="#ffd36b"/><text x="1180" y="138" text-anchor="middle">reveal</text>
+        </g>
+        <text x="10" y="18" font-family="ui-sans-serif" font-size="10" fill="#5e5868">TENSÃO</text>
+      </svg>
+    </div>
+    <div class="arc-steps">
+      <div class="step"><span class="k">① SETUP</span><div class="t">Narrador / ideia</div><div class="d">A sugestão do público aparece em texto. Enquadra o espectador como cúmplice.</div></div>
+      <div class="step"><span class="k">② ISCA</span><div class="t">Abordagem inocente</div><div class="d">Pede informação, ajuda, ou conversinha. Nada fora do normal ainda.</div></div>
+      <div class="step"><span class="k">③ FAÍSCA</span><div class="t">Primeira estranheza</div><div class="d">Uma frase ou ação inesperada. A vítima pensa "hã?" mas não rejeita.</div></div>
+      <div class="step"><span class="k">④ RAMPA</span><div class="t">Escalação 2–3 camadas</div><div class="d">Cada camada mais absurda, entregue com o mesmo tom. Sapo na panela.</div></div>
+      <div class="step"><span class="k">⑤ BOOM</span><div class="t">Clímax · reação real</div><div class="d">Raiva, riso, fuga, confusão. A vítima quebra — e aí está o ouro.</div></div>
+      <div class="step"><span class="k">⑥ ALÍVIO</span><div class="t">Reveal cúmplice</div><div class="d">"Tá gravando ali com ele ali na frente." Pós-reveal geralmente é riso.</div></div>
+    </div>
+  </div>
+</section>
+
+<h2 class="section">② Os 3 Pilares (aparecem em ~toda pegadinha)</h2>
+
+<section class="card">
+  <div class="pillars">
+    <div class="pillar">
+      <div class="num">01</div>
+      <h3>Escalação</h3>
+      <div class="why">Nunca começa no máximo. O gradiente é o truque: quando a vítima percebe o absurdo, já investiu demais pra ir embora.</div>
+<div class="mech">1. Pedido inocente
+2. Primeiro sinal ("hã?")
+3. Vítima tenta processar
+4. Segundo sinal, mais forte
+5. Vítima questiona
+6. EXPLOSÃO
+7. Reveal</div>
+    </div>
+    <div class="pillar">
+      <div class="num">02</div>
+      <h3>Deadpan</h3>
+      <div class="why">Ítalo <b>nunca</b> quebra. Expressão preocupada, tom calmo, persistência impassível. É o <b>amplificador</b> — multiplica qualquer outro princípio.</div>
+<div class="mech">absurdo + risada  = piada óbvia
+absurdo + seriedade = vítima se pergunta
+                     "será que é sério?"
+                     ↑ essa dúvida é o combustível</div>
+    </div>
+    <div class="pillar">
+      <div class="num">03</div>
+      <h3>Inversão de Papéis</h3>
+      <div class="why">Quem criou o caos se coloca como vítima. Quem devia estar constrangido finge que o constrangido é o outro.</div>
+<div class="mech">Prankster cria confusão
+    ↓
+"Como é que fica a MINHA situação?"
+    ↓
+Vítima perde o script social
+    ↓
+Não sabe mais como reagir</div>
+    </div>
+  </div>
+</section>
+
+<h2 class="section">③ Os 17 Princípios, Um a Um</h2>
+<div class="legend">
+  <span><span class="dot d-core"></span>Pilar / Core</span>
+  <span><span class="dot d-base"></span>Princípio base</span>
+  <span><span class="dot d-new"></span>Descoberto na meta-análise (#100 eps)</span>
+  <span><span class="dot d-meta"></span>Meta-estrutural</span>
+</div>
+
+<section class="grid g-prin" style="margin-top:14px">
+
+  <!-- 1 Escalação -->
+  <div class="prin-card core">
+    <span class="prin-badge">PILAR</span>
+    <div class="prin-head">
+      <div class="prin-ico">📈</div>
+      <div><div class="prin-title">Escalação</div><div class="prin-tag">O gradiente · sapo na panela</div></div>
+    </div>
+    <p class="prin-body">Começa suave, sobe camada por camada. Cada nova camada um pouco mais insana, entregue no mesmo tom.</p>
+    <p class="prin-why"><b>Motor:</b> se começasse no máximo, a vítima rejeita. O gradiente prende.</p>
+    <div class="prin-diag">suave ──▶ estranho ──▶ absurdo ──▶ INSANO</div>
+    <div class="prin-ex"><b>Ex:</b> Detetive Particular — <i>"tô te seguindo" → "instalei câmeras" → "mais duas semanas"</i></div>
+  </div>
+
+  <!-- 2 Deadpan -->
+  <div class="prin-card core">
+    <span class="prin-badge">PILAR</span>
+    <div class="prin-head">
+      <div class="prin-ico">🗿</div>
+      <div><div class="prin-title">Deadpan / Cara de Pau</div><div class="prin-tag">O amplificador</div></div>
+    </div>
+    <p class="prin-body">Entregar o absurdo com total seriedade. Expressão preocupada, tom conversacional, nunca quebra.</p>
+    <p class="prin-why"><b>Motor:</b> o contraste entre conteúdo absurdo e entrega séria cria a dúvida "ele tá falando sério?". Essa dúvida é o riso.</p>
+    <div class="prin-diag">absurdo × seriedade = 🔥
+absurdo × risada   = morno</div>
+    <div class="prin-ex"><b>Ex:</b> Exame de Fezes com espermatozoide — vítima lê, Ítalo reage com "preocupação genuína"</div>
+  </div>
+
+  <!-- 3 Inversão -->
+  <div class="prin-card core">
+    <span class="prin-badge">PILAR</span>
+    <div class="prin-head">
+      <div class="prin-ico">🔄</div>
+      <div><div class="prin-title">Inversão de Papéis</div><div class="prin-tag">"Como é que fica a MINHA situação?"</div></div>
+    </div>
+    <p class="prin-body">Quem criou o caos se posiciona como vítima. Subverte os scripts sociais implícitos.</p>
+    <p class="prin-why"><b>Motor:</b> dependemos de scripts pra interagir. Invertidos, a vítima perde referencial.</p>
+    <div class="prin-diag">papel esperado      ↔   papel jogado
+prankster = ofensor ↔   prankster = vítima
+vítima = ofendida   ↔   vítima = ré</div>
+    <p class="prin-quote">"Como é que fica a situação de Ivete?"</p>
+  </div>
+
+  <!-- 4 Duplo Sentido -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🎭</div>
+      <div><div class="prin-title">Duplo Sentido</div><div class="prin-tag">A armadilha da ambiguidade</div></div>
+    </div>
+    <p class="prin-body">Palavras com 2 significados — inocente vs constrangedor. Se a vítima reage ao "errado", se autoexpõe.</p>
+    <p class="prin-why"><b>Motor:</b> quem "pensou besteira" foi a vítima, não o prankster. Armadilha de autoexposição.</p>
+    <div class="prin-diag">"gata"   → animal  |  mulher
+"nude"   → bebida  |  foto íntima
+"pó"     → sabão   |  droga</div>
+    <div class="prin-ex"><b>Ex:</b> Cuida da Minha Gata (#283) — vítima espera um gato, aparece uma mulher</div>
+  </div>
+
+  <!-- 5 Lógica Absurda -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🌀</div>
+      <div><div class="prin-title">Lógica Absurda</div><div class="prin-tag">Raciocínio impossível com total convicção</div></div>
+    </div>
+    <p class="prin-body">Premissa absurda entregue como se fosse óbvia. A vítima gasta energia procurando sentido onde não há.</p>
+    <p class="prin-why"><b>Motor:</b> o cérebro busca coerência. A convicção faz a vítima duvidar de si antes de duvidar do prankster.</p>
+    <div class="prin-diag">Amigo de Ivete   ⇒ não pago conta
+Foto c/ Gusttavo ⇒ saio sem pagar
+Stalking         ⇒ habilidade pro</div>
+    <div class="prin-ex"><b>Ex:</b> Amigo de Ivete Sangalo — "ser amigo de celebridade = gratuidade universal"</div>
+  </div>
+
+  <!-- 6 Gaslighting -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🪞</div>
+      <div><div class="prin-title">Gaslighting Cômico</div><div class="prin-tag">Destruir a base do real</div></div>
+    </div>
+    <p class="prin-body">Fazer a vítima questionar percepção, memória, sanidade. Negar o óbvio, insistir no impossível.</p>
+    <p class="prin-why"><b>Motor:</b> ataca a premissa compartilhada do que é real — a vítima entra em curto-circuito.</p>
+    <div class="prin-diag">vítima nega  →  prova fabricada
+vítima insiste  →  "tá suspeito"
+vítima desiste  →  loop fechado</div>
+    <div class="prin-ex"><b>Ex:</b> Mulher Invisível (#376) — Ítalo conversa com alguém que a vítima não consegue ver</div>
+  </div>
+
+  <!-- 7 Kafkiano -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🕸️</div>
+      <div><div class="prin-title">Loop Kafkiano</div><div class="prin-tag">Armadilha lógica sem saída</div></div>
+    </div>
+    <p class="prin-body">A estrutura do problema impede a solução. Quanto mais tenta escapar, mais preso fica.</p>
+    <p class="prin-why"><b>Motor:</b> impotência cômica — o público reconhece a frustração, mas ri do lado de fora.</p>
+    <div class="prin-diag">negar = prova de culpa
+aceitar = impossível
+         ↓
+    LOOP INFINITO</div>
+    <div class="prin-ex"><b>Ex:</b> Pedindo Demissão Onde Não Trabalha (#358) — negar que trabalha "prova" o ambiente tóxico</div>
+  </div>
+
+  <!-- 8 Bait-and-Switch -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🎣</div>
+      <div><div class="prin-title">Bait-and-Switch</div><div class="prin-tag">Inversão estrutural da premissa</div></div>
+    </div>
+    <p class="prin-body">Criar uma expectativa deliberada, depois subverter totalmente. Toda a premissa muda.</p>
+    <p class="prin-why"><b>Motor:</b> quebra inteligente (não aleatória) de predição. Qualidade = quão convincente a isca + quão inesperada a virada.</p>
+    <div class="prin-diag">isca: "finjo ser gay"
+pausa
+switch: "sou hétero, me dá seu número"</div>
+    <div class="prin-ex"><b>Ex:</b> Se Fingindo de Gay p/ Pegar o Número (#374)</div>
+  </div>
+
+  <!-- 9 Constrangimento Social -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">😳</div>
+      <div><div class="prin-title">Constrangimento Social</div><div class="prin-tag">Cringe como combustível</div></div>
+    </div>
+    <p class="prin-body">Invasão de espaço, conteúdo inapropriado em público, ou associação forçada com algo embaraçoso.</p>
+    <p class="prin-why"><b>Motor:</b> desconforto por empatia + alívio de não ser você. O motor clássico de qualquer pegadinha.</p>
+    <div class="prin-diag">invasão física  → pepino microfone
+conteúdo alto   → curso de inglês gemendo
+leitura forçada → exame de fezes</div>
+    <div class="prin-ex"><b>Ex:</b> Comprando Remédio pra Ejaculação Precoce (#336) — pedido em voz alta na farmácia lotada</div>
+  </div>
+
+  <!-- 10 Falsa Familiaridade -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🫂</div>
+      <div><div class="prin-title">Falsa Familiaridade</div><div class="prin-tag">"Lembra de mim?"</div></div>
+    </div>
+    <p class="prin-body">Finge conhecer a vítima. Inventa memórias crescentemente absurdas. A pressão social de "não ser rude" mantém a vítima presa.</p>
+    <p class="prin-why"><b>Motor:</b> "e se eu realmente esqueci?" — essa dúvida é explorada até os apelidos se tornarem impossíveis demais.</p>
+    <div class="prin-diag">kit padrão:
+ · "lá na casa de vó"
+ · "troca-troca no quintal"
+ · apelidos: Bumbunguloso, Peido da Leite
+ · final: pedido de selinho</div>
+    <div class="prin-ex"><b>Ex:</b> Falsa Familiaridade Bumbum Guloso (#293)</div>
+  </div>
+
+  <!-- 11 Comédia Física -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🤸</div>
+      <div><div class="prin-title">Comédia Física</div><div class="prin-tag">Corpo quebrando scripts</div></div>
+    </div>
+    <p class="prin-body">Ação corporal, expressão, interação física inesperada. Rebolada, churros, cabeçada em produtos.</p>
+    <p class="prin-why"><b>Motor:</b> universal, não precisa de contexto cultural. Reação real amplifica o físico.</p>
+    <div class="prin-diag">"posso testar?" → cabeçada no colchão
+"obrigado!"    → rebolada no vendedor</div>
+    <div class="prin-ex"><b>Ex:</b> Posso Testar? — dar cabeçada em produtos pra "testar"</div>
+  </div>
+
+  <!-- 12 Repetição -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🔁</div>
+      <div><div class="prin-title">Repetição Estrutural</div><div class="prin-tag">Rule of three / callback</div></div>
+    </div>
+    <p class="prin-body">Repete o mesmo padrão, frase ou ação. Dentro da pegadinha (loop) ou entre episódios (callback).</p>
+    <p class="prin-why"><b>Motor:</b> antecipação cumprida + reação nova. "Engraçado na 2ª, hilário na 3ª."</p>
+    <div class="prin-diag">1ª vez: setup
+2ª vez: reconhecimento
+3ª vez: EXPLOSÃO de riso</div>
+    <div class="prin-ex"><b>Ex:</b> Remédio pra Memória — esquece que já perguntou porque esqueceu o remédio (loop perfeito)</div>
+  </div>
+
+  <!-- 13 Sacro-Profano -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">⛪</div>
+      <div><div class="prin-title">Sagrado / Profano</div><div class="prin-tag">A tensão espiritual brasileira</div></div>
+    </div>
+    <p class="prin-body">Subverter elementos religiosos com conteúdo profano/invertido. Particularmente eficaz no Brasil.</p>
+    <p class="prin-why"><b>Motor:</b> as reações são viscerais — rezar, invocar Jesus, repreender demônios. Desconforto espiritual real.</p>
+    <div class="prin-diag">oração → vira pacto c/ as trevas
+hino   → mantra invertido</div>
+    <div class="prin-ex"><b>Ex:</b> Oração Maligna (Machado 98) (#334) — oração invertida em público</div>
+  </div>
+
+  <!-- 14 Mundanidade Épica -->
+  <div class="prin-card">
+    <div class="prin-head">
+      <div class="prin-ico">🏟️</div>
+      <div><div class="prin-title">Mundanidade Épica</div><div class="prin-tag">Narrar o trivial como apocalíptico</div></div>
+    </div>
+    <p class="prin-body">Tratar ações banais como eventos épicos. O contraste entre conteúdo trivial e tratamento grandiose gera humor.</p>
+    <p class="prin-why"><b>Motor:</b> incongruência entre forma e conteúdo. Chave é a <b>sustentação</b> — minutos narrando microações.</p>
+    <div class="prin-diag">"Comendo o sorvetinho" →
+   narração esportiva Copa do Mundo
+   "Vai fazer uma fumacinha?!"</div>
+    <div class="prin-ex"><b>Ex:</b> Narração Rádio Machado 98 — estilo esportivo pra ações de estranhos na rua</div>
+  </div>
+
+  <!-- 15 Dilema Moral Impossível (NEW) -->
+  <div class="prin-card new">
+    <span class="prin-badge">NEW</span>
+    <div class="prin-head">
+      <div class="prin-ico">⚖️</div>
+      <div><div class="prin-title">Dilema Moral Impossível</div><div class="prin-tag">Escolha binária, qualquer resposta condena</div></div>
+    </div>
+    <p class="prin-body">"Daria o c* pra salvar a namorada?" Escolha absurda com peso moral real. Formato: questionário de psicologia da federal.</p>
+    <p class="prin-why"><b>Motor:</b> cada segundo de hesitação revela o cálculo interno. A reação do parceiro presente é o 2º combustível.</p>
+    <div class="prin-diag">sim → humilhação pública
+não → "não ama o suficiente"
+     ambos = condenação</div>
+    <div class="prin-ex"><b>Ex:</b> Beijo Pra Salvar a Esposa? (#301) · 50 Reais ou Selinho? (#322) · Daria o C*? (#326)</div>
+  </div>
+
+  <!-- 16 Autoridade Inventada (NEW) -->
+  <div class="prin-card new">
+    <span class="prin-badge">NEW</span>
+    <div class="prin-head">
+      <div class="prin-ico">📜</div>
+      <div><div class="prin-title">Autoridade Inventada</div><div class="prin-tag">Burocracia como veículo do absurdo</div></div>
+    </div>
+    <p class="prin-body">Siglas inventadas (ILC, ILB), artigos fictícios ("Artigo 58 do Machado 98"), multas, formulários. A vítima obedece ao <b>formato</b>, não à lógica.</p>
+    <p class="prin-why"><b>Motor:</b> reflexo cultural brasileiro — crachá + sigla + tom oficial = obedecer primeiro, questionar depois.</p>
+    <div class="prin-diag">1. credencial falsa
+2. citação de artigo/lei
+3. exigência de CPF/pagamento
+4. dobrar aposta burocrática</div>
+    <div class="prin-ex"><b>Ex:</b> Fiscal da Prefeitura (#367) · Fiscalizando WhatsApp p/ Xandão (#312) · Tornozeleira Eletrônica (#366)</div>
+  </div>
+
+  <!-- 17 Cumplicidade do Público (META) -->
+  <div class="prin-card meta">
+    <span class="prin-badge">META</span>
+    <div class="prin-head">
+      <div class="prin-ico">👥</div>
+      <div><div class="prin-title">Cumplicidade do Público</div><div class="prin-tag">Opera FORA da pegadinha</div></div>
+    </div>
+    <p class="prin-body">O fã veterano tem informação privilegiada. Reconhece bordões, universo Machado 98, padrões. Ri de camadas que a vítima não vê.</p>
+    <p class="prin-why"><b>Motor:</b> inside joke em escala massiva. "Mande a Sua" radicaliza isso — o público é co-autor literal.</p>
+    <div class="prin-diag">vítima:   1 camada  (a pegadinha)
+fã novo:  2 camadas (+ o formato)
+fã velho: 3 camadas (+ o lore)</div>
+    <div class="prin-ex"><b>Amplificador universal</b> — não é técnica aplicada na vítima, é relação estrutural canal↔audiência que potencializa os outros 16</div>
+  </div>
+
+</section>
+
+<h2 class="section">④ Como os Princípios se Combinam (combos canônicos)</h2>
+
+<section class="card">
+  <div class="combos">
+    <div class="combo">
+      <h4>💣 Pedido Absurdo</h4>
+      <div class="formula">Lógica Absurda × Deadpan</div>
+      <div class="ex"><b>Amigo de Ivete</b> · <b>Relógio Canhoto</b> · <b>Filho na Barbearia</b></div>
+    </div>
+    <div class="combo">
+      <h4>🎭 Constrangimento Invertido</h4>
+      <div class="formula">Duplo Sentido × Bait-and-Switch × Inversão</div>
+      <div class="ex"><b>Cuida da Gata</b> · <b>Vendendo Nude</b> · <b>Padaria Seu Coração</b></div>
+    </div>
+    <div class="combo">
+      <h4>🌀 Realidade Distorcida</h4>
+      <div class="formula">Gaslighting × Loop Kafkiano</div>
+      <div class="ex"><b>Mulher Invisível</b> · <b>Foto Beijando</b> · <b>Pedindo Demissão</b></div>
+    </div>
+    <div class="combo">
+      <h4>⚖️ Dilema Público</h4>
+      <div class="formula">Dilema Moral × Constrangimento × Autoridade Inventada</div>
+      <div class="ex"><b>Daria o C*?</b> · <b>Beijo pra Salvar Esposa</b> · <b>Questionário "da federal"</b></div>
+    </div>
+    <div class="combo">
+      <h4>🏢 Infiltração Burocrática</h4>
+      <div class="formula">Autoridade Inventada × Loop Kafkiano × Inversão</div>
+      <div class="ex"><b>Pedindo Demissão Onde Não Trabalha</b> · <b>Trocando Turno</b> · <b>Demitindo Funcionário</b></div>
+    </div>
+    <div class="combo">
+      <h4>⛪ Sacro Subvertido</h4>
+      <div class="formula">Sacro-Profano × Escalação × Autoridade Inventada</div>
+      <div class="ex"><b>Igreja Machado 98</b> · <b>Oração Maligna</b> · <b>Tutorial Seita</b></div>
+    </div>
+    <div class="combo">
+      <h4>🫂 Cringe Íntimo</h4>
+      <div class="formula">Falsa Familiaridade × Escalação × Constrangimento</div>
+      <div class="ex"><b>Amigo das Antigas</b> · <b>Grupo Gay</b> · <b>Ex-Namorado</b></div>
+    </div>
+    <div class="combo">
+      <h4>🏟️ Autoestima Nuclear</h4>
+      <div class="formula">Mundanidade Épica × Inversão × Deadpan</div>
+      <div class="ex"><b>Delicinha</b> · <b>Cirurgia p/ Feios</b> · <b>Auto-Elogio Copacabana</b></div>
+    </div>
+  </div>
+</section>
+
+<h2 class="section">⑤ Universo Machado 98 (worldbuilding cômico)</h2>
+
+<section class="grid g-two">
+  <div class="card">
+    <h2>Os nós do universo</h2>
+    <p style="margin:0 0 4px;color:#cfcac2;font-size:13px">
+      Uma instituição fictícia que é simultaneamente rádio, igreja, seita, laboratório e clínica. Cada aparição é um callback que recompensa o fã veterano.
+    </p>
+    <div class="m98">
+      <div class="node"><span class="emoji">📻</span>Rádio Machado 98<div class="ep">"narração das trevas"</div></div>
+      <div class="node"><span class="emoji">⛪</span>Igreja Machado 98<div class="ep">oração → pacto</div></div>
+      <div class="node"><span class="emoji">🕯️</span>Seita Machado 98<div class="ep">tutorial de conversão</div></div>
+      <div class="node"><span class="emoji">🧪</span>Laboratório Machados<div class="ep">exames absurdos</div></div>
+      <div class="node"><span class="emoji">🏥</span>Clínica Machados<div class="ep">depilação, estética</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Multiplicadores de formato</h2>
+    <ul class="mult">
+      <li><span class="ico">📣</span><div><b>"Mande a Sua"</b> — público sugere ideias; filtro natural de volume. Milhões de ideias → as 4-7 melhores por episódio.</div></li>
+      <li><span class="ico">🎭</span><div><b>Personagens</b> Alírio / Milto — escudo, "não é ele mesmo". Vítima se irrita menos; prankster pode ousar mais.</div></li>
+      <li><span class="ico">🔁</span><div><b>Bordões</b> recorrentes — "essa delicinha aqui", "troca-troca no quintal de vó", "tá gravando ali" — callbacks baratos, alta retenção.</div></li>
+      <li><span class="ico">🎙️</span><div><b>Improviso real</b> sobre reação real. Vítima não é script — adaptação ao vivo.</div></li>
+      <li><span class="ico">🇧🇷</span><div><b>Cultura BR</b> — Ivete, CAPS, religião, Xandão, Gusttavo Lima. Humor intraduzível.</div></li>
+      <li><span class="ico">⏱️</span><div><b>Ritmo</b> — ~15 min, 4–7 pegadinhas curtas, nunca arrasta.</div></li>
+    </ul>
+  </div>
+</section>
+
+<h2 class="section">⑥ Por Que Funciona Melhor Que Outros Canais</h2>
+<section class="card">
+  <div class="chips">
+    <span class="chip"><b>✓</b>Prankster é o "doido", não a vítima</span>
+    <span class="chip"><b>✓</b>Zero violência</span>
+    <span class="chip"><b>✓</b>Improviso genuíno</span>
+    <span class="chip"><b>✓</b>Reações reais, sem efeitos</span>
+    <span class="chip"><b>✓</b>Humor cultural específico</span>
+    <span class="chip"><b>✓</b>Ritmo impecável</span>
+    <span class="chip"><b>✓</b>Público co-criador</span>
+    <span class="chip"><b>✓</b>Worldbuilding recompensa fã</span>
+  </div>
+</section>
+
+<h2 class="section">⑦ Veredito — Entendemos o Motor?</h2>
+<section class="card">
+  <div class="verdict">
+    <div class="col ok">
+      <h3>✓ Sucessos</h3>
+      <ul>
+        <li>Taxonomia <b>satura</b>: 14 → 17 princípios ao escalar de 11 → 100 episódios</li>
+        <li>Arco canônico vale pros <b>507</b> pranks sem exceção estrutural</li>
+        <li>3 pilares (Escalação + Deadpan + Inversão) explicam a maioria</li>
+        <li>Machado 98 isolado como motor de <b>retenção</b> (callback economy)</li>
+        <li>"Mande a Sua" identificado como <b>vantagem competitiva</b> estrutural</li>
+        <li>3 princípios novos (Dilema, Autoridade, Cumplicidade) preenchem lacunas da v1</li>
+      </ul>
+    </div>
+    <div class="col gap">
+      <h3>△ Gaps</h3>
+      <ul>
+        <li>Rodadas 4–6 (≈136 pranks, eps #305–#367) ainda em template, não análise profunda</li>
+        <li>Sem camada <b>quantitativa</b>: co-ocorrência de princípios, correlação com views/reações</li>
+        <li>Sem <b>baseline comparativo</b> vs outros canais (o que é único?)</li>
+        <li>Sem evolução <b>temporal</b> da fórmula ao longo dos 100 episódios</li>
+        <li>Intensidade dos princípios é <b>heurística</b>, não contagem real</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>ta-gravando-wiki · 103 eps · 507 pranks · 17 princípios · 10 constelações · 5 nós Machado 98</footer>
+</body>
+</html>
