@@ -36,7 +36,24 @@
   .g-three{grid-template-columns:repeat(3,1fr)}
   .g-prin{grid-template-columns:repeat(3,1fr);gap:14px}
   @media (max-width:1100px){ .g-prin{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:720px){ .g-prin{grid-template-columns:1fr} .g-kpis{grid-template-columns:repeat(3,1fr)} .g-two{grid-template-columns:1fr} }
+  @media (max-width:720px){
+    body{padding:16px 14px}
+    h1{font-size:26px}
+    .g-prin{grid-template-columns:1fr}
+    .g-kpis{grid-template-columns:repeat(3,1fr)}
+    .g-two{grid-template-columns:1fr}
+    .arc-steps{grid-template-columns:repeat(3,1fr)}
+    .arc-curve text{display:none}
+    .pillars{grid-template-columns:1fr}
+    .combos{grid-template-columns:1fr}
+    .m98{grid-template-columns:repeat(3,1fr)}
+    .verdict{grid-template-columns:1fr}
+  }
+  @media (max-width:480px){
+    .g-kpis{grid-template-columns:repeat(2,1fr)}
+    .arc-steps{grid-template-columns:repeat(2,1fr)}
+    .m98{grid-template-columns:repeat(2,1fr)}
+  }
   .card{background:var(--panel);border:1px solid var(--line);
     border-radius:14px;padding:18px 20px}
   .card h2{font-size:14px;text-transform:uppercase;letter-spacing:1.4px;
@@ -100,7 +117,7 @@
   .prin-ex b{color:var(--accent)}
   .prin-diag{font-family:ui-monospace,Menlo,monospace;font-size:11px;
     color:#9aa8b8;background:#0c0b10;border:1px solid #22202a;
-    border-radius:7px;padding:7px 9px;line-height:1.65;white-space:pre}
+    border-radius:7px;padding:7px 9px;line-height:1.65;white-space:pre-wrap;overflow-x:auto}
   .prin-quote{font-style:italic;font-size:12px;color:#ffdf9d;
     border-top:1px solid #2a2530;padding-top:8px;margin:0}
 
