@@ -2,8 +2,8 @@
 
 Engenharia reversa do canal **[Tá Gravando](https://www.youtube.com/@TaGravando)** (Ítalo Sena) como wiki pública: 103 episódios, 507 pegadinhas, 17 princípios de comédia catalogados.
 
-🌐 **Site:** https://balancejunkie.github.io/ta-gravando/
-🎛️ **Dashboard visual:** https://balancejunkie.github.io/ta-gravando/static/overview.html
+🌐 **Site:** https://tagravando.wiki
+🎛️ **Dashboard visual:** https://tagravando.wiki/static/overview.html
 
 Construído com [Quartz v4](https://quartz.jzhao.xyz) — publica o vault Obsidian com wikilinks, backlinks, busca e graph view, responsivo no mobile. Deploy automático via GitHub Actions.
 
