@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "quartz-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "quartz/static", "-l", "3456", "--no-clipboard"],
+      "port": 3456
+    }
+  ]
+}
